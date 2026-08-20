@@ -1,0 +1,6 @@
+{
+  "name": "QR Code Generator API",
+  "description": "Production-ready REST API and developer portal for generating customizable QR codes with authentication, analytics, multiple formats, and OpenAPI documentation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

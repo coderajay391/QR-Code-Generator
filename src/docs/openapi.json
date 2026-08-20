@@ -1,0 +1,318 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "QR Code Generator API",
+    "version": "1.0.0",
+    "description": "Production-ready REST API for generating customizable QR codes (URL, Wi-Fi, vCard, Email, Phone, SMS, Geo, Crypto) with user authentication, custom styling, central logo embedding, history tracking, and rate limiting.",
+    "contact": {
+      "name": "API Engineering Team",
+      "email": "coderajay391@gmail.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "API v1 Endpoint"
+    }
+  ],
+  "tags": [
+    { "name": "Health", "description": "System health and status monitoring" },
+    { "name": "Authentication", "description": "User registration, login, and profile retrieval" },
+    { "name": "QR Generation", "description": "Public and anonymous QR code generation" },
+    { "name": "QR History", "description": "Authenticated QR code persistence, filtering, and management" },
+    { "name": "Logo Upload", "description": "Safe logo file validation and processing" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter your JWT token in the format 'Bearer <token>'"
+      }
+    },
+    "schemas": {
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Operation completed successfully" },
+          "data": { "type": "object" },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": { "type": "string", "example": "email" },
+                "message": { "type": "string", "example": "Invalid email address" }
+              }
+            }
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "65cb789123456789abcdef01" },
+          "name": { "type": "string", "example": "John Doe" },
+          "email": { "type": "string", "example": "john@example.com" },
+          "role": { "type": "string", "example": "user" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "QROptions": {
+        "type": "object",
+        "properties": {
+          "size": { "type": "integer", "default": 300, "minimum": 100, "maximum": 2000, "example": 400 },
+          "margin": { "type": "integer", "default": 4, "minimum": 0, "maximum": 20, "example": 4 },
+          "errorCorrectionLevel": { "type": "string", "enum": ["L", "M", "Q", "H"], "default": "M", "example": "H" },
+          "foregroundColor": { "type": "string", "default": "#000000", "example": "#1e293b" },
+          "backgroundColor": { "type": "string", "default": "#FFFFFF", "example": "#ffffff" },
+          "format": { "type": "string", "enum": ["png", "svg", "dataurl"], "default": "png", "example": "png" },
+          "logoUrl": { "type": "string", "example": "https://example.com/logo.png" },
+          "style": { "type": "string", "enum": ["square", "dots", "rounded"], "default": "square" }
+        }
+      },
+      "GenerateQRRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["text", "url", "wifi", "vcard", "email", "phone", "sms", "geo", "crypto"],
+            "default": "url",
+            "example": "wifi"
+          },
+          "title": { "type": "string", "example": "Office Guest Wi-Fi" },
+          "data": { "type": "string", "example": "https://example.com" },
+          "ssid": { "type": "string", "example": "OfficeWiFi_5G" },
+          "password": { "type": "string", "example": "SecureGuestPassword2026" },
+          "encryption": { "type": "string", "enum": ["WPA", "WPA2", "WEP", "Open"], "example": "WPA" },
+          "firstName": { "type": "string", "example": "Jane" },
+          "lastName": { "type": "string", "example": "Smith" },
+          "phone": { "type": "string", "example": "+1 (555) 234-5678" },
+          "email": { "type": "string", "example": "jane.smith@enterprise.com" },
+          "company": { "type": "string", "example": "Acme Innovations" },
+          "website": { "type": "string", "example": "https://acme.example.com" },
+          "subject": { "type": "string", "example": "Partnership Inquiry" },
+          "body": { "type": "string", "example": "Hello team, I would like to learn more..." },
+          "message": { "type": "string", "example": "Hi! Scanning your QR code." },
+          "latitude": { "type": "number", "example": 37.7749 },
+          "longitude": { "type": "number", "example": -122.4194 },
+          "address": { "type": "string", "example": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" },
+          "options": { "$ref": "#/components/schemas/QROptions" }
+        }
+      },
+      "GeneratedQRResponse": {
+        "type": "object",
+        "properties": {
+          "format": { "type": "string", "example": "png" },
+          "qrCode": { "type": "string", "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA..." },
+          "type": { "type": "string", "example": "wifi" },
+          "formattedContent": { "type": "string", "example": "WIFI:T:WPA;S:OfficeWiFi_5G;P:SecureGuestPassword2026;;" },
+          "options": { "$ref": "#/components/schemas/QROptions" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check endpoint",
+        "description": "Returns operational status, uptime, and database connection state.",
+        "responses": {
+          "200": {
+            "description": "API is operational",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new user",
+        "description": "Creates a new user account with hashed password and returns a signed JWT token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password"],
+                "properties": {
+                  "name": { "type": "string", "example": "John Doe" },
+                  "email": { "type": "string", "format": "email", "example": "john.doe@example.com" },
+                  "password": { "type": "string", "format": "password", "example": "StrongPass123!" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created successfully" },
+          "400": { "description": "Invalid input" },
+          "409": { "description": "Email already in use" },
+          "422": { "description": "Password validation failed" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Authenticate user",
+        "description": "Validates credentials and returns JWT bearer token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "example": "john.doe@example.com" },
+                  "password": { "type": "string", "example": "StrongPass123!" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Authentication successful" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Get current user profile",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Profile retrieved" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/qr/generate": {
+      "post": {
+        "tags": ["QR Generation"],
+        "summary": "Anonymous QR code generation",
+        "description": "Public rate-limited endpoint to generate QR codes without saving to database history.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GenerateQRRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "QR code generated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponse" }
+              }
+            }
+          },
+          "429": { "description": "Rate limit exceeded" }
+        }
+      }
+    },
+    "/qr/upload-logo": {
+      "post": {
+        "tags": ["Logo Upload"],
+        "summary": "Upload and validate logo image",
+        "description": "Validates file size (≤5MB) and safe image MIME types (PNG, JPEG, WebP, SVG).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["image"],
+                "properties": {
+                  "image": { "type": "string", "description": "Base64 data or data URL", "example": "data:image/png;base64,..." },
+                  "mimeType": { "type": "string", "example": "image/png" },
+                  "filename": { "type": "string", "example": "company-logo.png" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Logo validated and processed" }
+        }
+      }
+    },
+    "/qr": {
+      "post": {
+        "tags": ["QR History"],
+        "summary": "Generate and save QR code",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GenerateQRRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "QR code saved to user history" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "get": {
+        "tags": ["QR History"],
+        "summary": "List user saved QR codes",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "type", "in": "query", "schema": { "type": "string" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["createdAt:desc", "createdAt:asc", "title:asc", "title:desc"] } }
+        ],
+        "responses": {
+          "200": { "description": "List of saved QR codes" }
+        }
+      }
+    },
+    "/qr/{id}": {
+      "get": {
+        "tags": ["QR History"],
+        "summary": "Get specific QR code",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "QR code retrieved" },
+          "404": { "description": "Not found" }
+        }
+      },
+      "delete": {
+        "tags": ["QR History"],
+        "summary": "Delete QR code",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "QR code deleted" },
+          "404": { "description": "Not found" }
+        }
+      }
+    }
+  }
+}

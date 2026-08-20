@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qr-generator-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/qr-generator
+      - JWT_SECRET=production_jwt_super_secure_secret_key_change_me_2026
+      - JWT_EXPIRES_IN=7d
+      - CLIENT_URL=http://localhost:3000
+      - MAX_FILE_SIZE=5242880
+      - RATE_LIMIT_MAX_PUBLIC=60
+      - RATE_LIMIT_MAX_AUTH=300
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - qr-network
+
+  mongodb:
+    image: mongo:6.0
+    container_name: qr-generator-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=qr-generator
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - qr-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  qr-network:
+    driver: bridge
