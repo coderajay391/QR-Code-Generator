@@ -3,7 +3,7 @@
 A high-performance, production-ready **REST API for generating and managing customizable QR codes** built with **Node.js, Express.js, TypeScript, MongoDB, and Mongoose**.
 
 Features enterprise-grade security (JWT authentication, bcrypt password hashing, Helmet headers, CORS, Zod validation, rate limiting, and Winston structured logging), rich customization (SVG/PNG/DataURL, colors, margins, error correction levels, central logo embedding), and full OpenAPI 3.0 documentation.
-
+<image src="./assets/qr-code.png">
 ---
 
 ## 📑 Table of Contents
